@@ -22,25 +22,38 @@ function addTask() {
   document.getElementById('deadline').value = '';
   document.getElementById('effort').value = '';
 
-  // Render tasks
-  renderTasks();
+  // Send tasks to backend for AI prioritization
+  sendTasksToBackend();
 }
 
-// Render tasks on the page
-function renderTasks() {
+// Send tasks to Flask backend
+async function sendTasksToBackend() {
+  const response = await fetch('http://10.152.233.210:5000/prioritize', {  // <-- Replace with your Flask IP
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ tasks: taskList })
+  });
+
+  const data = await response.json();
+  renderTasksWithAI(data);
+}
+
+// Render AI-ranked tasks on the page
+function renderTasksWithAI(tasks) {
   const container = document.getElementById('taskList');
   container.innerHTML = '';
 
-  taskList.forEach((task, index) => {
+  tasks.forEach(task => {
     const div = document.createElement('div');
     div.className = 'task-item';
     div.innerHTML = `
       <strong>${task.name}</strong><br>
-      Deadline: ${task.deadline} – Effort: ${task.effort} hrs
+      Deadline: ${task.deadline} – Effort: ${task.effort} hrs<br>
+      <em>${task.explanation}</em>
     `;
     container.appendChild(div);
   });
 }
 
-// Add event listener to button
+// Add event listener to Add Task button
 document.getElementById('addTaskBtn').addEventListener('click', addTask);
